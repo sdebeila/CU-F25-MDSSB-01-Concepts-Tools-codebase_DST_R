@@ -1,0 +1,847 @@
+---
+title: "Session 01: Introduction to Data Structures and Plotting with GGPLOt"
+format:   
+  html:                     
+    standalone: true      # renders to html-file with header and css javascript
+    embed-resources: true   # html will embed all figures
+    code-fold: true         # we only need to look at code if we want
+    number-sections: true   # We number the sections
+---
+
+# Session 01:
+
+# Introduction to Data Structures and Plotting with GGPLOT
+
+Welcome to Data Science Tools. The recommended readings for session 1 are chapter 3 and 28 (data visualization) and chapter 20 (vectors) in R for Data Science ( https://r4ds.had.co.nz/).
+
+## 1. Load the packages and data
+
+In order to work with R productively, we need packages that improve on the base-R functionality. Base-R offers a set of functions particularly well-adjusted to statistical analysis and data management. Additional packages provide additional functionality. In general, you should be careful not to use too many packages, and be careful with packages with a version number below 1.0. They may be discontinued. The Tidyverse is among the well-established packages (actually a collection of packages).
+
+Let's load it:
+
+```{r - load tidyverse, include = FALSE}
+#install.packages("tidyverse") # package installation
+library(tidyverse) # loading the package
+# If loading the package fails, you may need to install it first
+
+```
+
+(PS: include = FALSE runs the code, but doesn't show the code or results in the final document. Use this for setup code that you don't want cluttering your report.)
+
+Some packages also offer data sets we can work with. Let's load one with data about flights.
+
+```{r - load flights data, include =FALSE}
+#install.packages("nycflights13") # package installation
+library(nycflights13) # load the package
+flights <- flights # load the package into the global environment (upper right)
+```
+
+Also, let's look at a basic description of the variables in the data set, which comes with the package.
+
+```{r - dataset description}
+?flights # get info about the package content (lower right window)
+```
+
+You can see in the documentation that the data set has 19 interesting variables to work with. However, it also has more than 300,000 observations, which slows down computation. So we sill select a subset from the package to work with here - the month September.
+
+```{r - create subset for plotting}
+flights_sep <- flights %>% # %>% is called the pipe operator
+  filter(month== 9 ) # the filter command selects a subset of observations
+```
+
+Now we're down to 27k.
+
+## 2. Data and Variables
+
+Let's get an overview of the data first. The function glimpse() provides us a quick overview of the different variables, the type of data, and the first few observations.
+
+```{r - glimpse, include = FALSE}
+glimpse(flights_sep) # read the output in the console
+```
+
+R is an object-oriented programming language. The behaviour you get out of your data depend on how it is stored and what class it is assigned. The function typeof() gives you the storage mode of the data:
+
+```{r - typeof()}
+?typeof()
+```
+
+The function class() gives you the type of object, which in turn is important for how it interacts with functions.
+
+```{r - class()}
+?class()
+```
+
+Determining storage mode and object class is a very important part of troubleshooting. When you get stuck, a lot of the time, the key to the answer is here, so it can potentially save you many hours of time.
+
+### 2.1 metric variables
+
+There are various **metric variables**, which are typically stored as vectors of the type "integer" or "double."
+
+```{r - storage dep time}
+typeof(flights_sep$dep_time)
+```
+
+Departure time is saved as an integer, which represents a count of full numbers.
+
+```{r - object dep time}
+class(flights_sep$dep_time)
+```
+
+In this case, the object class goes by the same name.
+
+The arrival delay conversely is saved as a "double" vector, and the most obvious difference is that these numbers may have behind the comma.
+
+```{r - storage arrival delay}
+typeof(flights_sep$arr_delay)
+```
+
+The object class is called "numeric"
+
+```{r - object arr:delay}
+class(flights_sep$arr_delay)
+```
+
+Check the following simple example of a simple calculation:
+
+numeric class
+
+```{r - numeric example}
+as.numeric(1/3) # as.numeric() assigns the numeric class to the output
+```
+
+The result cannot fully be displayed.
+
+... check the vector type
+
+```{r - numeric example type}
+typeof(as.numeric(1/3)) # the numeric variable is stored as a double vector
+```
+
+integer class
+
+```{r - integer example}
+as.integer(1/3) # same for integer, but here class and vector type overlap
+```
+
+and vector
+
+```{r - integer example type}
+typeof(as.integer(1/3))
+```
+
+### 2.2 Missing and special values
+
+There are some important differences between doubles and integers that you should read up on in r4ds chapter 20. Most importantly, integers have only one special value: "Not Available" (NA) for a missing observation. Doubles can have infinite values or values that are "Not a Number" (NaN).
+
+```{r - double special values}
+c(-1, 0, 1, NA) / 0 # c() creates a vector of several elements separated by commas
+```
+
+Missing values (NA) are usually the most common headache (though that may be my domain-specific experience talking).
+
+You can check the number of NAs easily for a single variable:
+
+```{r - missing values - single variable}
+#summary(is.na(flights_sep$dep_time))
+
+# is.na() puts out a "logical" (or boolean) vector labelling every observation TRUE or FALSE.
+# try commenting out the above and instead use:
+#is.na(flights_sep$dep_time)
+
+# the summary function here counts the observations in each category.
+summary(flights_sep$dep_time)
+
+
+
+```
+
+We can also get an overview of the entire data set:
+
+```{r - missing values - dataset, include = FALSE}
+colSums(is.na(flights_sep)) # culSums() summs up over the columns
+# in this case, TRUE counts as 1 and FALSE counts as 0
+# See results in the console
+```
+
+We can also check variables for infinity in a similar way:
+
+```{r - infinity values - double}
+summary(is.infinite(flights_sep$air_time))
+summary(is.nan(flights_sep$air_time))
+```
+
+By the way, for categorical variables, NAs are also the most important special values.
+
+### 2.3 Categorical variables
+
+Furthermore, we also have **categorical variables**, such as the airport of origin. In this data set, they are stored as character vectors, which are used for any type of text to be stored (see also: chapter 14 on strings).
+
+```{r - table of airports}
+table(flights_sep$origin) # table() provides a count for the number of observations in all categories in the form of a table
+```
+
+But we might also think of the month as a categorical variable, even though it is stored as an integer. Both character vectors and numeric vectors can be converted to **factors**, which can be **coded as nominal or ordinal categorical variables**. Many functions in base-R transform categorical variables to factors by default. (See also: r4ds chapter 15)
+
+```{r - factor typeof()}
+typeof(as.factor(flights_sep$origin)) 
+```
+
+The character vector is converted to an integer vector ... and to the object class "factor".
+
+```{r - factor class()}
+class(as.factor(flights_sep$origin))
+```
+
+### 2.4 How are object classes useful?
+
+The separation of class and vector-type may appear un-intuitive at first. One added value is that we can define more specific object classes that make our life easier. Let's take dates and times as an example:
+
+```{r - head function}
+head(flights_sep$time_hour) # head() shows us the first few observations of any vector.
+```
+
+Dates and times are saved as double vectors in a standardized format.
+
+```{r - time field 2}
+typeof(flights_sep$time_hour)
+class(flights_sep$time_hour)
+```
+
+The special object class allows for special behaviours. For example, we can get the weekday easily: Either as a category:
+
+```{r - weekdays categorical}
+table(wday(flights_sep$time_hour, label = TRUE))
+```
+
+```{r - class weekdays categorical}
+class(wday(flights_sep$time_hour, label = TRUE))
+```
+
+(In this case it's an ordered factor, which means the order of the weekdays is preserved)
+
+Or as a number:
+
+```{r - weekdays numerical}
+table(wday(flights_sep$time_hour, label = FALSE))
+```
+
+.... the class is numeric.
+
+```{r - class weekdays numerical}
+class(wday(flights_sep$time_hour, label = FALSE))
+```
+
+If your domain deals with dates and times a lot, you can read more on this topic in r4ds chapter 16.
+
+## 3. Plotting 2 metric variables: scatter plot
+
+In tidyverse, plotting is done with the ggplot2-package. It has its own syntax. It involves calling the function ggplot(), in which a plot is created by using one or several mappings and geoms. Let's look at a practical example:
+
+If we inspect the connection between 2 metric variables, we typically do a scatter plot. In ggplot, we use the function geom_point() to do this. Say we want to know the connection between the distance and the duration of a flight ....
+
+```{r - bare bones scatterplot 1}
+flights_sep %>% # use the pipe operator to throw data into function
+  ggplot(mapping = aes(x=distance, y = air_time)) + # ggplot()
+  geom_point() # geom()
+
+```
+
+The mapping specifies the data to be used in the plot, and geom_point() indicates that we want a scatter plot.
+
+This is fine in terms of content, but it does not look very nice. We get a warning about missing values, and many of the values are at the far end of the plot.
+
+First, let's get rid of the missing values. We combine the function filter() with a condition: is.na() determines missing values, and ! negates the statement. So filter() gets only observations that have no missing values.
+
+```{r - bare bones scatterplot 2}
+flights_sep %>% 
+  filter(!is.na(distance) & !is.na(air_time)) %>% # ! indicates NOT
+  ggplot(mapping = aes(x=distance, y = air_time)) + 
+  geom_point() 
+```
+
+Next, we want a close-up on the main field of observations. We could do that via the filter function:
+
+```{r - bare bones scatterplot 3}
+flights_sep %>% 
+  filter(!is.na(distance) & !is.na(air_time) & distance<3000 & air_time < 400) %>%
+  ggplot(mapping = aes(x=distance, y = air_time)) + 
+  geom_point() 
+```
+
+### 3.1 Visualizing third variables in scatter plots
+
+#### 3.1.1 Color and Transparency
+
+We want to make this scatter plot more informative.
+
+One way of looking at this is using color as a dimension: in ggplot, you can adjust color with a color parameter in the geom function.
+
+```{r - scatter plot color 1}
+flights_sep %>% 
+  filter(!is.na(distance) & !is.na(air_time) & distance<1000 & air_time < 200) %>%
+  ggplot(mapping = aes(x=distance, y = air_time)) + 
+  geom_point(color="deepskyblue2")
+```
+
+For an overview of available colors in ggplot, see: http://sape.inf.usi.ch/quick-reference/ggplot2/colour
+
+#### 3.1.1.1 metric variables
+
+You can assign color to a metric variable. Say we want to know if the flights with above-average flighttime are also more delayed than normal flights ...
+
+```{r - scatter plot delay numerical}
+
+flights_sep %>%
+  filter(!is.na(distance) & !is.na(air_time) & distance<2000 & air_time < 500) %>%
+  ggplot(mapping = aes(x=distance, y = air_time, 
+                       color = arr_delay)) + 
+  geom_point() 
+
+```
+
+It looks like this is not the case
+
+Unfortunately, the default coloring is not visualizing this information well
+
+Let's adjust the colors assigned to the numerical values.
+
+We can use the function scale_color_gradient() to set the colors we want at the beginning or the end of the scale.
+
+```{r - scatter plot delay numerical 2}
+flights_sep %>% 
+  filter(!is.na(distance) & !is.na(air_time) & distance<1000 & air_time < 200) %>%
+  ggplot(mapping = aes(x=distance, y = air_time, 
+                       color = arr_delay)) + 
+  geom_point() +
+  scale_color_gradient(low = "yellow", high = "red")
+
+```
+
+Let's try to highlight airplanes with a worse delay.
+
+We could do it by using the transparency parameter alpha to make flights with little or no delay more transparent ... let's focus on flights with more than 30 minutes delay.
+
+```{r - scatter plot delay numerical 3}
+flights_sep %>% 
+  filter(!is.na(distance) & !is.na(air_time) & distance<1000 & 
+           air_time < 200 & arr_delay > 30) %>%
+  ggplot(mapping = aes(x=distance, y = air_time, 
+                       color = arr_delay)) + 
+  geom_point(alpha = 0.6) +
+  scale_color_gradient(low = "yellow", high = "red")
+
+
+```
+
+There is a better overview, but I still do not like it that much.
+
+We can also tie several parameters to the delay: color, transparency (alpha) and size of the points. Now, flights with a worse delay have bigger, darker and less transparent points.
+
+```{r - scatter plot delay numerical 4}
+flights_sep %>% 
+  filter(!is.na(distance) & !is.na(air_time) & distance<1000 & air_time < 200 & 
+           arr_delay > 30) %>%
+  ggplot(mapping = aes(x=distance, y = air_time, 
+                       color = arr_delay,
+                       alpha = arr_delay, 
+                       size = arr_delay)) + 
+  geom_point() +
+  scale_color_gradient(low = "yellow", high = "red")
+```
+
+This is better. So we get a mixed picture, and we see that the flights with the worst delays do not have exceptionally long flight times. Therefore, they probably departed with a delay already.
+
+#### 3.1.1.2 categorical variables
+
+We can also use the weekdays as a factor (i.e. a categorical variable) to determine the color.
+
+Here, the default colors are more diverse:
+
+```{r - scatterplot color weekday categorical}
+flights_sep %>% 
+  filter(!is.na(distance) & !is.na(air_time) & distance<1000 & air_time < 200) %>%
+  ggplot(mapping = aes(x=distance, y = air_time, 
+                       color = wday(time_hour, label = TRUE))) + 
+  geom_point() 
+```
+
+If we want our own customized color set, we can manually assign colors to categories:
+
+```{r - scatterplot color weekday categorical 2}
+flights_sep %>% 
+  filter(!is.na(distance) & !is.na(air_time) & distance<1000 & air_time < 200) %>%
+  ggplot(mapping = aes(x=distance, y = air_time,
+                       color = wday(time_hour, label = TRUE))) + 
+  geom_point() +
+  scale_color_manual(values =  c("Sun" = "darkred",
+                                "Mon"="red",
+                                "Tue"="orange",
+                                "Wed"="yellow",
+                                "Thu"="greenyellow",
+                                "Fri"="green3",
+                                "Sat"="blue"))  
+```
+
+This looks nice, but there are many overlapping points. we can get a better feeling for the density of the observations if we make the points more transparent. We can use the parameter alpha in the geom to achieve this, which is set between 0 and 1.
+
+```{r - scatter plot color 3}
+flights_sep %>% 
+  filter(!is.na(distance) & !is.na(air_time) & distance<1000 & air_time < 200) %>%
+  ggplot(mapping = aes(x=distance, y = air_time, 
+                       color = wday(time_hour, label = TRUE))) + 
+  geom_point(alpha = 0.4) +
+  scale_color_manual(values = c("Sun" = "darkred",
+                                "Mon"="red",
+                                "Tue"="orange",
+                                "Wed"="yellow",
+                                "Thu"="greenyellow",
+                                "Fri"="green3",
+                                "Sat"="blue")) 
+```
+
+This is a bit better, but not really satisfactory.
+
+#### 3.1.2 Adding shapes and sizes
+
+We could also try to plot a different shape. We can use the shape parameter in the geom to plot rings instead of points, thus getting a better feel for density.
+
+```{r - scatter plot shape}
+flights_sep %>% 
+  filter(!is.na(distance) & !is.na(air_time) & distance<1000 & air_time < 200) %>%
+  ggplot(mapping = aes(x=distance, y = air_time, 
+                       color = wday(time_hour, label = TRUE))) + 
+  geom_point(shape = 18) +
+  scale_color_manual(values = c("Sun" = "darkred",
+                                "Mon"="red",
+                                "Tue"="orange",
+                                "Wed"="yellow",
+                                "Thu"="greenyellow",
+                                "Fri"="green3",
+                                "Sat"="blue")) 
+
+```
+
+For an overview of available shapes, see: http://www.sthda.com/english/wiki/ggplot2-point-shapes
+
+We can use the parameter size to make the points smaller. If we make the points smaller, there will be less overlap:
+
+```{r - scatter plot size}
+flights_sep %>% 
+  filter(!is.na(distance) & !is.na(air_time) & distance<1000 & air_time < 200) %>%
+  ggplot(mapping = aes(x=distance, y = air_time, 
+                       color = wday(time_hour, label = TRUE))) + 
+  geom_point(size = 0.5)  +
+  scale_color_manual(values = c("Sun" = "darkred",
+                                "Mon"="red",
+                                "Tue"="orange",
+                                "Wed"="yellow",
+                                "Thu"="greenyellow",
+                                "Fri"="green3",
+                                "Sat"="blue"))
+```
+
+Some shapes have several parameters we can adjust.
+
+Let's assume we want to look at flights of a distance below 500 miles, and that we want both airport of origin and the weekday represented.
+
+We can choose a shape with rim around:
+
+```{r - scatter plot shape & size}
+flights_sep %>% 
+  filter(!is.na(distance) & !is.na(air_time) & distance<500 & air_time < 100) %>%
+  ggplot(mapping = aes(x=distance, y = air_time, 
+                       color =  origin, 
+                       fill = wday(time_hour, label = TRUE))) + 
+  geom_point(shape = 21, size = 3)  +
+    scale_fill_manual(values = c("Sun"="darkred",
+                                "Mon"="red",
+                                "Tue"="orange",
+                                "Wed"="yellow",
+                                "Thu"="greenyellow",
+                                "Fri"="green3",
+                                "Sat"="blue")) +
+  scale_color_manual(values = c("EWR"="ivory2",
+                                "JFK"="grey53",
+                                "LGA"="black"))
+```
+
+Here, the rim around the circles represents the airport of origin, and the filling represents the weekday. Note how the functions have been adjusted accordingly.
+
+### 3.2 Regression lines
+
+Say we want to visualize the relationship between the two main variables through regression lines. We can use the function geom_smooth() to do this ... we can simply ad another geom to the plot.
+
+Let's look at flights with both departure delay and arrival delay between 1 and 2 hours ...
+
+```{r - scatter plot regression 1}
+flights_sep %>% 
+  filter(!is.na(dep_delay) & !is.na(arr_delay)  & 
+           arr_delay > 60 & dep_delay >60 & 
+           arr_delay < 120 & dep_delay < 120) %>%
+  ggplot(mapping = aes(x=dep_delay, y = arr_delay, color = origin)) + 
+    geom_point(shape = 1)  +
+    geom_smooth(se = FALSE) # without the standard errors
+
+```
+
+What happened here?
+
+We specified the mapping in ggplot, so it is valid for both geoms in the plot. Because we specified different colors for different airports, we not get three regression lines - one for the observations corresponding to each airport. This may or may not be what we want.
+
+Also, geom_smooth() should have a formula and method for the regression specified.
+
+In order to change it, we specify separate mappings and add a function for geom_smooth():
+
+```{r - scatter plot regression 2}
+flights_sep %>% 
+  filter(!is.na(dep_delay) & !is.na(arr_delay)  & 
+           arr_delay > 60 & dep_delay >60 & 
+           arr_delay < 120 & dep_delay < 120) %>%
+  ggplot(mapping = aes(x=dep_delay, y = arr_delay)) +
+    geom_point(mapping = aes(color = origin), shape = 1)  +
+    geom_smooth(formula = y ~ x, method = "lm", # specify formula
+              color = "black", se = TRUE)
+```
+
+So, now we got the mapping in the ggplot function which is valid for both geoms, and we got specifications in the geom functions as well.
+
+We could get the same result by specifying two completely separate mappings in the geoms only:
+
+```{r - scatter plot regression 3}
+flights_sep %>% 
+  filter(!is.na(dep_delay) & !is.na(arr_delay)  & 
+           arr_delay > 60 & dep_delay >60 & 
+           arr_delay < 120 & dep_delay < 120) %>%
+  ggplot() +
+  geom_point(mapping = aes(x=dep_delay, y = arr_delay, color = origin),
+             shape = 1)  +
+  geom_smooth(formula = y ~ x, method = "lm",
+              mapping = aes(x=dep_delay, y = arr_delay), 
+              color = "black", se = FALSE)
+```
+
+How good are our estimates? Let's add some standard errors:
+
+```{r - scatter plot regression 4}
+flights_sep %>% 
+  filter(!is.na(dep_delay) & !is.na(arr_delay)  & 
+           arr_delay > 60 & dep_delay >60 & 
+           arr_delay < 120 & dep_delay < 120) %>%
+  ggplot() +
+  geom_point(mapping = aes(x=dep_delay, 
+                           y = arr_delay, 
+                           color = origin), 
+             shape = 1)  +
+  geom_smooth(formula = y ~ x, method = "lm", # model formula
+              mapping = aes(x=dep_delay, y = arr_delay), 
+              color = "black", 
+              se = TRUE)
+```
+
+### 3.3 Make it presentable
+
+Once we decided that this is the plot we want, we can make it presentable. We need a title, maybe a subtitle and caption, as well as a description of the axes and a title for the legend.
+
+```{r - scatter plot almost presentable}
+flights_sep %>% 
+  filter(!is.na(dep_delay) & !is.na(arr_delay)  & 
+           arr_delay > 60 & dep_delay >60 & 
+           arr_delay < 120 & dep_delay < 120) %>%
+  ggplot() +
+  geom_point(mapping = aes(x=dep_delay, 
+                           y = arr_delay, 
+                           color = origin), 
+             shape = 1)  +
+  geom_smooth(formula = y ~ x, method = "lm", 
+              mapping = aes(x=dep_delay, y = arr_delay), 
+              color = "black", se = TRUE) +
+    labs(title = "Departure delay and arrival delay",
+       subtitle = "For delays between one and two hours",
+       caption = "Data from nycflights13 package",
+       x = "Departure delay in minutes",
+       y = "Arrival delay in minutes",
+       color = "Airport of origin") # legend title
+# How to change the legend title varies depending on plot design
+# you may have shape or size depending on other variables
+
+```
+
+We might also want to adjust the scales, so that everything is in units of 5 minutes.
+
+```{r - scatter plot presentable}
+flights_sep %>% 
+  filter(!is.na(dep_delay) & !is.na(arr_delay)  & 
+           arr_delay > 60 & dep_delay >60 & 
+           arr_delay < 120 & dep_delay < 120) %>%
+  ggplot() +
+  geom_point(mapping = aes(x=dep_delay, 
+                           y = arr_delay, 
+                           color = origin), 
+             shape = 1)  +
+  geom_smooth(formula = y ~ x, method = "lm", 
+              mapping = aes(x=dep_delay, y = arr_delay), 
+              color = "black", se = TRUE) +
+    labs(title = "Departure delay and arrival delay",
+       subtitle = "For delays between one and two hours",
+       caption = "Data from nycflights13 package",
+       x = "Departure delay in minutes",
+       y = "Arrival delay in minutes",
+       color = "Airport") + # legend title
+  scale_x_continuous(breaks = seq(60, 120, by = 5)) +
+  scale_y_continuous(breaks = seq(60, 120, by = 5))
+# seq() creates a sequence with a start value (60), and end value(120) and a distance between the steps (by = 5)
+
+# How to change the legend title varies depending on plot design
+# you may have shape or size depending on other variables
+```
+
+We may also want to use a different font (like Times New Roman), and adjust some other elements, but we are not getting into this today.
+
+## 4. Plotting 1 metric variable
+
+### 4.1 Histogram
+
+A histogram groups the values of a metric variable into groups, and then visualizes the sum of observations in these groups.
+
+```{r - barebones histogram}
+flights %>%
+  filter(month == 2) %>%
+  ggplot() +
+  geom_histogram(mapping = aes(x=distance))
+```
+
+The obvious parameter to adjust is the size of the groups. You can do that with binwidth ... here, its the number of miles captured in 1 column. You can un-comment the different lines to try different binwidths:
+
+```{r - histogram binwidth}
+flights %>%
+  filter(month == 2) %>%
+  ggplot() +
+  geom_histogram(mapping = aes(x=distance)
+                 # , binwidth = 10 # 10 miles per column
+                 , binwidth = 100 # 100 miles per column
+                 #, binwidth = 1000
+                 )
+```
+
+You can play around with the color for design purposes ...
+
+```{r - histogram color 1}
+flights %>%
+  filter(month == 2) %>%
+  ggplot() +
+  geom_histogram(mapping = aes(x=distance), binwidth = 100,
+                 fill = "yellow", color = "green")
+```
+
+.... and make it presentable.
+
+```{r - histogram presentable}
+flights %>%
+  filter(month == 2) %>%
+  ggplot() +
+   geom_histogram(mapping = aes(x=distance), binwidth = 100,
+                 fill = "yellow", color = "green") +
+  labs(title = "Flights by distance",
+       subtitle = "Histogram with binwidth 100",
+       caption = "Data from nycflights13 package",
+       x = "Distance in miles",
+       y = "Number of flights")
+```
+
+### 4.2 Boxplot
+
+A boxplot can illustrate the distribution of metric (or ordinal) variables in a different way than a histogram.
+
+The box corresponds to the middle 50% of the data, and the observations above and below the box correspond to the upper and lower quartile. The line accross the box corresponds to the median of the data. The whiskers represent the values of the upper and lower quartile, provided they are within 1.5 times the inter-quartile distance (i.e. the distance spanned by the box). Values beyond this distance are considered outliers and represented as points.
+
+```{r - bare bones boxplot 1}
+flights %>%
+  filter(month == 2 & is.finite(air_time)) %>%
+  ggplot(mapping = aes(y = air_time)) +
+  geom_boxplot()
+```
+
+Make it presentable ...
+
+```{r - kind of presentable boxplot}
+?geom_boxplot()
+flights %>%
+  filter(month == 2 & is.finite(air_time)) %>%
+  ggplot(mapping = aes(y = air_time)) +
+  geom_boxplot(color = "green4", outlier.color = "red3") +
+  labs(title = "Airtime of Flights",
+       subtitle = "A Tukey-style boxplot",
+       caption = "Data from nycflights13 package",
+       y = "Time spent in the air in minutes") +
+    theme(axis.title.x=element_blank(), # removes x-axis description
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  scale_y_continuous(breaks = seq(0, 700, by = 60))
+  
+```
+
+This could still be improved, but let's leave it for now ...
+
+## 5. Plotting 1 categorical variable: Column- and bar-plots
+
+According to some statisticians, 60% to 80% of interesting variables in political science and sociology are categorical in nature. There are some limitations to plotting such variables.
+
+The function geom_bar() in ggplot provides a count of the number of observation in a categorical variable.
+
+```{r - bare bones column plot}
+ggplot(data =flights, mapping =aes(x =origin)) +
+  geom_bar()
+```
+
+If there are many categories, it may be better to flip the graph
+
+```{r - bare bones bar plot}
+ggplot(data =flights, mapping =aes(x =carrier)) +
+  geom_bar() +
+  coord_flip() # turns the graph by 90°
+```
+
+And of course, you can adjust the colors to your liking as in the histogram ...
+
+```{r - barplot colored & presentable}
+ggplot(data =flights) +
+  geom_bar(aes(x =origin),  
+           alpha = 0.8, fill = "yellow2", color = "green1") +
+  labs(title = "Flights count",
+      subtitle = "Grouped by airport of origin",
+      caption = "Data from nycflights13 package",
+      x = "Airport of origin")  # legend title
+```
+
+## 6. Plotting 1 categorical and one metric variable
+
+### 6.1 in a Boxplot
+
+We can plot several boxplots to compare the distribution of a continuous variable in several categories. For example, we may want to know how arrival delays differ between airlines.
+
+```{r - bare bones boxplot 2}
+flights %>%
+  filter(month == 2 & is.finite(arr_delay)) %>% # exclude infinite values
+  ggplot() + 
+  geom_boxplot(mapping = aes(x=carrier, y = arr_delay))
+
+```
+
+Make it presentable ...
+
+```{r - presentable boxplot 2}
+flights %>%
+  filter(month == 2 & is.finite(arr_delay)) %>% # exclude infinite values
+  ggplot() + 
+  geom_boxplot(mapping = aes(x=carrier, y = arr_delay),
+               fill = "red", color = "blue", outlier.colour = "purple") +
+  labs(title = "Who to fly with?",
+      subtitle = "Arrival delays grouped by airline",
+      caption = "Data from nycflights13 package",
+      x = "Airline",
+      y = "Arrival delay in minutes") +
+  scale_y_continuous(breaks = seq(-120, 900, by = 60)) +
+  coord_flip() # rotate plot by 90 degrees
+```
+
+### 6.2 in a histogram
+
+You can also add information about a categorical variable to a histogram.
+
+```{r - presentable boxplot 3}
+flights %>%
+  filter(month == 2) %>%
+  ggplot() +
+  geom_histogram(mapping = aes(x=distance, fill = origin), # fill !!
+                 binwidth = 100) +
+  labs(title = "Flights by distance",
+       subtitle = "Histogram with binwidth 1000 and airport of origin",
+       caption = "Data from nycflights13 package",
+       x = "Distance in miles",
+       y = "Number of flights",
+       fill = "Airport")  # legend title
+```
+
+### 6.3 in a bar- or column plot
+
+The function geom_col() allows you to illustrate values like averages of numerical variables in a bar- or column plot. Nevermind the calculation part for now ...
+
+```{r - column-plot average delay}
+flights %>%
+  group_by(carrier) %>%
+  summarise(average_delay = mean(arr_delay, na.rm = TRUE)) %>% # calculation of average delay
+  ggplot(mapping =aes(x =carrier, y = average_delay)) + 
+  geom_col() 
+```
+
+... but make it presentable ...
+
+```{r - column-plot average delay - presentable}
+flights %>%
+  group_by(carrier) %>%
+  summarise(average_delay = mean(arr_delay, na.rm = TRUE)) %>% # calculation of average delay
+  ggplot(mapping =aes(x =carrier, y = average_delay)) + 
+  geom_col() +
+  labs(title = "Average delays",
+      subtitle = "Arrival delays by airline",
+      caption = "Data from nycflights13 package",
+      x = "Airline",
+      y = "Arrival delay in minutes") +  # legend title
+  scale_y_continuous(breaks = seq(-10, 30, by = 10)) +
+  coord_flip()
+```
+
+It does not have to be colored if the colors do not add valuable information.
+
+It the graph is meant for a print publication that comes in black and white, colors may actually do more damage than good.
+
+## 7. Plotting 2 categorical variables in a bar- or column-plot
+
+A lot of the time, we would use cross-tables for numeric analysis.
+
+A bar- or column-plot is well-suited for illustrating 2 categorical variables at a time.
+
+```{r - barplot colored 2 presentable}
+ggplot(data =flights) +
+  geom_bar(aes(x =origin, fill = carrier),  
+           #alpha = 0.5 # better not
+           ) +
+  labs(title = "Flights count",
+      subtitle = "Grouped by airport of origin and carrier",
+      caption = "Data from nycflights13 package",
+      x = "Airport of origin",
+      fill = "airline")  # legend title
+```
+
+Sometimes you want the relative size of the groups rather than the absolute size ...
+
+```{r - barplot colored 3 - presentable}
+ggplot(data =flights) +
+  geom_bar(aes(x =origin, fill = carrier),  
+           position = "fill", # important adjustment
+           #alpha = 0.5
+           ) +
+  labs(title = "Flights count",
+      subtitle = "Grouped by airport of origin and carrier",
+      caption = "Data from nycflights13 package",
+      x = "Airport of origin",
+      y = "percentage of the total",
+      fill = "airline")  # legend title
+```
+
+switch the variables
+
+```{r - switch variable}
+ggplot(data =flights) +
+  geom_bar(aes(x =carrier, fill = origin),  
+           position = "fill", # important adjustment
+           #alpha = 0.5
+           ) +
+  labs(title = "Flights count",
+      #subtitle = "Grouped by airport of origin and carrier",
+      caption = "Data from nycflights13 package",
+      x = "Airport of origin",
+      y = "percentage of the total",
+      fill = "airline")  # legend title
+```
