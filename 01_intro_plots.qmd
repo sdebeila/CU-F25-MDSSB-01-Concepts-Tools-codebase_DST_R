@@ -10,7 +10,7 @@ format:
 
 # Session 01:
 
-# Introduction to Data Structures and Plotting with GGPLOT
+# Introduction to Data Structures and Plotting with GGPLOT (2025)
 
 Welcome to Data Science Tools. The recommended readings for session 1 are chapter 3 and 28 (data visualization) and chapter 20 (vectors) in R for Data Science ( https://r4ds.had.co.nz/).
 
