@@ -12,7 +12,7 @@ format:
 
 # Introduction to Data Structures and Plotting with GGPLOT (2025)
 
-Welcome to Data Science Tools. The recommended readings for session 1 are chapter 3 and 28 (data visualization) and chapter 20 (vectors) in R for Data Science ( https://r4ds.had.co.nz/).
+Welcome to Data Science Tools. The recommended readings for session 1 are chapter 3, 28 and 29 (data visualization) and chapter 12 (vectors) in R for Data Science ( https://r4ds.had.co.nz/).
 
 ## 1. Load the packages and data
 
@@ -47,9 +47,9 @@ You can see in the documentation that the data set has 19 interesting variables 
 
 ```{r - create subset for plotting}
 flights_sep <- flights %>% # %>% is called the pipe operator
-  filter(month== 9 ) # the filter command selects a subset of observations
+  filter(month== 9) # the filter command selects a subset of observations
 ```
-
+ 
 Now we're down to 27k.
 
 ## 2. Data and Variables
@@ -132,7 +132,7 @@ typeof(as.integer(1/3))
 
 ### 2.2 Missing and special values
 
-There are some important differences between doubles and integers that you should read up on in r4ds chapter 20. Most importantly, integers have only one special value: "Not Available" (NA) for a missing observation. Doubles can have infinite values or values that are "Not a Number" (NaN).
+There are some important differences between doubles and integers that you should read up on in r4ds chapter 12. Most importantly, integers have only one special value: "Not Available" (NA) for a missing observation. Doubles can have infinite values or values that are "Not a Number" (NaN).
 
 ```{r - double special values}
 c(-1, 0, 1, NA) / 0 # c() creates a vector of several elements separated by commas
@@ -147,12 +147,10 @@ You can check the number of NAs easily for a single variable:
 
 # is.na() puts out a "logical" (or boolean) vector labelling every observation TRUE or FALSE.
 # try commenting out the above and instead use:
-#is.na(flights_sep$dep_time)
+is.na(flights_sep$dep_time)
 
 # the summary function here counts the observations in each category.
 summary(flights_sep$dep_time)
-
-
 
 ```
 
