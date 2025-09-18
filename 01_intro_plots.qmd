@@ -12,7 +12,7 @@ format:
 
 # Introduction to Data Structures and Plotting with GGPLOT (2025)
 
-Welcome to Data Science Tools. The recommended readings for session 1 are chapter 3, 28 and 29 (data visualization) and chapter 12 (vectors) in R for Data Science ( https://r4ds.had.co.nz/).
+Welcome to Data Science Tools. The recommended readings for session 1 are chapter 3, 9 to 13, 18, 28 and 29 (data visualization) and chapter 12 (vectors) in R for Data Science (https://r4ds.hadley.nz/).
 
 ## 1. Load the packages and data
 
@@ -147,7 +147,7 @@ You can check the number of NAs easily for a single variable:
 
 # is.na() puts out a "logical" (or boolean) vector labelling every observation TRUE or FALSE.
 # try commenting out the above and instead use:
-is.na(flights_sep$dep_time)
+#is.na(flights_sep$dep_time)
 
 # the summary function here counts the observations in each category.
 summary(flights_sep$dep_time)
@@ -242,7 +242,6 @@ If we inspect the connection between 2 metric variables, we typically do a scatt
 flights_sep %>% # use the pipe operator to throw data into function
   ggplot(mapping = aes(x=distance, y = air_time)) + # ggplot()
   geom_point() # geom()
-
 ```
 
 The mapping specifies the data to be used in the plot, and geom_point() indicates that we want a scatter plot.
@@ -279,7 +278,7 @@ One way of looking at this is using color as a dimension: in ggplot, you can adj
 flights_sep %>% 
   filter(!is.na(distance) & !is.na(air_time) & distance<1000 & air_time < 200) %>%
   ggplot(mapping = aes(x=distance, y = air_time)) + 
-  geom_point(color="deepskyblue2")
+  geom_point(color="darkorchid")
 ```
 
 For an overview of available colors in ggplot, see: http://sape.inf.usi.ch/quick-reference/ggplot2/colour
@@ -328,8 +327,6 @@ flights_sep %>%
                        color = arr_delay)) + 
   geom_point(alpha = 0.6) +
   scale_color_gradient(low = "yellow", high = "red")
-
-
 ```
 
 There is a better overview, but I still do not like it that much.
@@ -343,7 +340,8 @@ flights_sep %>%
   ggplot(mapping = aes(x=distance, y = air_time, 
                        color = arr_delay,
                        alpha = arr_delay, 
-                       size = arr_delay)) + 
+                       size = arr_delay
+                       )) + 
   geom_point() +
   scale_color_gradient(low = "yellow", high = "red")
 ```
@@ -387,7 +385,8 @@ This looks nice, but there are many overlapping points. we can get a better feel
 flights_sep %>% 
   filter(!is.na(distance) & !is.na(air_time) & distance<1000 & air_time < 200) %>%
   ggplot(mapping = aes(x=distance, y = air_time, 
-                       color = wday(time_hour, label = TRUE))) + 
+                       color = wday(time_hour, label = TRUE))
+                       ) + 
   geom_point(alpha = 0.4) +
   scale_color_manual(values = c("Sun" = "darkred",
                                 "Mon"="red",
@@ -409,7 +408,7 @@ flights_sep %>%
   filter(!is.na(distance) & !is.na(air_time) & distance<1000 & air_time < 200) %>%
   ggplot(mapping = aes(x=distance, y = air_time, 
                        color = wday(time_hour, label = TRUE))) + 
-  geom_point(shape = 18) +
+  geom_point(shape = 0) +
   scale_color_manual(values = c("Sun" = "darkred",
                                 "Mon"="red",
                                 "Tue"="orange",
