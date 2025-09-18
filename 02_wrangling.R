@@ -70,7 +70,7 @@ getwd() # check your working directory
 
 # you can set it in 2 steps:
 # a. get the path by selecting a file in the project folder
-file.choose()
+#file.choose()
 # in the window that opens, navigate to the folder & select a random file
 
 # b. copy the path without the file name from the spelling convention
@@ -91,14 +91,15 @@ setwd("/Users/arminmuller/Github_repositories/R")
 # Standard choice: .csv (comma-separated values) files
 
 # let's save the flights dataset
-write_csv(flights, "flights.csv")
+write_csv(flights, "/Users/arminmuller/Github_repositories/flights.csv")
+
 # see the file appear in your project folder??
 # DO NOT PUSH DATA TO GITHUB REPOSITORIES !!!!!!!
 
 # Let's import it again
 flights2 <- read_csv("flights.csv")
 
-file.choose()
+#file.choose()
 flights3 <- read_csv("/Users/arminmuller/Github_repositories/R/flights.csv")
 
 
@@ -126,7 +127,7 @@ flights4 <- read_rds("flights.rds")
 
 ?flights
 
-# 2. Basic data structures (fundamentals - see chapter 10 & 20)
+# 2. Basic data structures (fundamentals - see chapter 12 & 13)
 
 # (This part contains lots of base-R)
 
@@ -207,7 +208,6 @@ FALSE > TRUE
 
 # 2.1.3 character vectors & factors (very briefly)
 letters <- c("a", "b", NA , "d", "e", NA, "g")
-letters <- c('a', 'b', NA , 'd', 'e', NA, 'g')
 print(letters)
 typeof(letters)
 typeof(flights$carrier)
@@ -379,21 +379,22 @@ flights |> # base-R pipe operator
 # ...
 
 flights %>% 
-  lapply(function(x) min(x, na.rm = TRUE))
+  sapply(function(x) min(x, na.rm = TRUE))
 # no error for character vectors
 
+
 flights %>% 
-  lapply(function(x) max(x, na.rm = TRUE))
+  sapply(function(x) max(x, na.rm = TRUE))
 # no error for character vectors
 
 flights %>% 
   lapply(function(x) median(x, na.rm = TRUE))
 # error for character values
 #median(as.factor(flights$carrier), na.rm = TRUE)
-
+glimpse(flights)
 
 flights %>% 
-  lapply(function(x) mean(x, na.rm = TRUE))
+  sapply(function(x) mean(x, na.rm = TRUE))
 # error for character values
 
 ## simplest approach:
@@ -497,8 +498,8 @@ flights %>%
 # linear model: also not so useful
 linear_model %>% 
   unlist() %>% 
-  length()
-  #typeof()
+  #length()
+  typeof()
 
 # More useful scenario:
 # store the maxima of all variables in a vector
@@ -512,8 +513,7 @@ typeof(maxima)
 
 
 
-# 2.3 Data Frames (base-R) and Tibbles (Tidyverse) & 
-# see also: book chapter 10
+# 2.3 Data Frames (base-R) and Tibbles (Tidyverse)
 
 # the base-R data frame
 df <- data.frame(x = 1:5, y = 5:1)
@@ -532,7 +532,7 @@ class(tb) # object class: data frame and tibble
 attributes(tb) 
 
 ## example: output
-flights # or
+as.data.frame(flights) # or
 tibble(flights)
 attributes(flights)
 
@@ -546,7 +546,7 @@ attributes(flights)
 
 ## Indexing: as for lists
 
-## a. by variable name:
+## a. by variable name: (most important for now)
 flights$dep_time
 
 # is the same as
@@ -554,7 +554,7 @@ flights$dep_time
 flights %>% 
   .$dep_time
 
-## b. by element number
+## b. by element number (useful to know)
 
 flights[[4]]
 
@@ -582,7 +582,7 @@ flights[1,4] # first line, fourth column
 flights %>% 
   .[1,4]
 
-# or just the first row
+# or just the first line
 flights[1,]
 
 # or the fourth column
@@ -600,15 +600,14 @@ flights[[4]]
 
 
 # 3. Data Transformation
-# book chapter 5
 
 # We are now switching from base-R syntax to Tidyverse syntax
 # Tidyverse emphasizes modular organization of lines over nested code
 # This makes trouble-shooting easier when code gets more complex
 
 # There are some fundamental functions for wrangling in Tidyverse
-## filter() - select observations
-## select() - select variables
+## filter() - select observations (functional equivalent to indexing)
+## select() - select variables (functional equivalent to indexing)
 ## arrange() - order observations
 ## mutate() - create a new variable
 
@@ -623,7 +622,7 @@ flights[[4]]
 ## in classic base-R syntax
 filter(flights, month == 1, day == 1)
 ## in Tidyverse syntax
-flights %>% 
+flights |> 
   filter(month==1, day==1)
 
 # save the results:
@@ -638,13 +637,6 @@ jan1 <- flights %>%
 jan1
 
 
-# print & save
-## base-R syntax
-(dec25 <- filter(flights, month == 12, day == 25))
-## Tidyverse syntax
-(jan1 <- flights %>% filter(month==1, day==1))
-
-
 
 # Non-metric variables:
 
@@ -652,6 +644,7 @@ jan1
 ## all flights to Hawai (Honolulu airport)
 flights %>% 
   filter(dest == "HNL")
+
 
 # Logical conditions
 ## all flights with scheduled arrival time lower than scheduled departure time
@@ -669,10 +662,18 @@ flights %>%
 flights %>% 
   arrange(year, month, day)
 
+## try with a time variable
+flights %>% 
+  arrange(time_hour)
+
 #  order rows by the date in decending order
 ?desc()
 flights %>% 
   arrange(desc(dep_delay))
+
+# convert biggest delay to hours
+1301/60
+
 
 
 # 3.3 variables by name: select()
@@ -746,8 +747,10 @@ flights_sml2
 
 ?flights
 
-flights %>% 
-  sample_n(10000) %>% # get a sample of 10000 observations
+flights_test <- flights %>% 
+  sample_n(10000) # get a sample of 10000 observations
+
+flights_test %>% 
   select(year:day,  # select the meaningful variables
          ends_with("delay"),
          ends_with("time"),
@@ -758,7 +761,7 @@ flights %>%
   ggplot(mapping = aes(x = dep_delay, y = dep_delay2)) +
     geom_point() + 
     labs(y = "departure delay in minutes (calculated)",
-         x = "departure delay in HHMM format",
+         x = "departure delay in minutes (original dataset)",
          title = "Departure delay consistency check")
 
 # This looks weird:
@@ -798,7 +801,7 @@ flights %>%
   # Sixth: create a scatter plot
   ggplot(mapping = aes(x = dep_delay, y = dep_delay2)) +
   geom_point() + 
-  labs(x = "departure delay in HHMM format",
+  labs(x = "departure delay in minutes (original dataset)",
        y = "departure delay in minutes (calculated)",
        title = "Departure delay consistency check")
 
