@@ -981,6 +981,8 @@ OrMo_fli_wi
 # Alternatively:
 OrMo_fli_wi2 <- OrMo_fli %>%
   pivot_wider(names_from = month, values_from = flights) 
+OrMo_fli_wi2
+
 colnames(OrMo_fli_wi2) <-  c("origin", "jan", "feb", "mar", "apr", "may", "jun","jul", "aug", "sep", "oct", "nov", "dec")
 
 OrMo_fli_wi2
@@ -1008,7 +1010,7 @@ OrMo_fli_lo
 # In doing so, we refer back to principles from relational data bases.
 
 # These principles include:
-## 1) Preferably, each information is stored only once to minimize redundancy
+## 1) Preferably, each information is stored only once to minimize redundance
 ## 2) every observation needs to be identified by a unique key
 ## 3) relations: one-to-one, one-to-many, many-to-one
 
@@ -1094,7 +1096,6 @@ flights_key2 %>%
   filter(tailnum  %in% planes$tailnum == FALSE)
 
 
-######### 20240912!
 
 
 # 5.3 Joins
@@ -1104,6 +1105,8 @@ planes2 <- planes
 summary(planes2$year)
 # let's invent a fake tail number for all planes built until 1998 ...
 planes2$tailnum[planes2$year<=1998] <- "N9999"
+
+summary(planes2$tailnum %in% flights_key2$tailnum)
 
 
 # 5.3.1 joining datasets
@@ -1124,10 +1127,7 @@ flights_key2 %>%
 # Right-join: keeps all observations in planes
 flights_key2 %>%
   select(-origin, -dest) %>% 
-  right_join(planes2, by = "tailnum") %>% # 218,546 observations
-  filter(tailnum=="N9999") 
-# keeping 1021 planes older than 1998, along with actual flights
-# messed up data structure
+  right_join(planes2, by = "tailnum") # 218,546 observations
 
 
 # semi_join(x, y) keeps all observations in flights that have a match in planes.
@@ -1198,11 +1198,11 @@ class(c("dest" = "faa"))
 attributes(c("dest" = "faa"))
 
 flights_key2 %>% 
-  inner_join(airports, c("dest" = "faa")) 
+  inner_join(airports, by = c("dest" = "faa")) 
 # 329,174 flights with destination airport info
 
 flights_key2 %>% 
-  inner_join(airports, c("origin" = "faa")) %>% 
+  inner_join(airports, by = c("origin" = "faa")) %>% 
   # 336,776 flights with origin airport info
   glimpse()
 
