@@ -95,13 +95,15 @@ c("TRUE", "FALSE", "NA") %>%
 ?parse_date() # readr package
 # useful for data import
 
+"2010-10-01" %>%
+  parse_date() %>%
+  str()
+
 "2010-10-01 20:10:01" %>%
   parse_datetime() %>%
   str()
 
-"2010-10-01" %>%
-  parse_date() %>%
-  str()
+
 
 ## but not:
 "2010-10-01 20:10:01" %>%
@@ -207,7 +209,7 @@ as.Date("01/02/15", "%m/%d/%y") # specification does work!
 
 
 
-# b) Lubridate package (chapter 16)
+# b) Lubridate package (see book chapter on time)
 ?ymd()
 ?hms()
 ymd("2017-01-31")
@@ -291,7 +293,7 @@ help("%/%")
 ?"%/%"
 5 %/% 2 # indicates integer division. 
 5 %% 2 # x mod y (“x modulo y”), i.e., computes the ‘remainder’
-# It is guaranteed that x == (x %% y) + y * (x %/% y)
+# It is guaranteed that x == y * (x %/% y) + (x %% y)
 
 
 
@@ -387,8 +389,6 @@ flights_dt %>%
        y = "Actual departure time",
        title = "Departure delay consistency check")
 
-# We still have the problem with delays stretching over midnight
-
 
 # Let's check Departures on October 4
 flights_dt %>% 
@@ -426,7 +426,6 @@ flights_dt %>%
   labs(x = "Weekday in October",
        y = "Average arrival delay",
        title = "Average arrival delays by weekday")
-# A little bit similar to Deutsche Bahn ...
 
 
 
@@ -525,6 +524,7 @@ one_pm
 one_pm + ddays(1) # different time, different time zone
 # ... because of daylight savings time: March 12 has only 23 hours
 # How to avoid this problem?
+
 
 
 # 4.2 Periods
@@ -889,7 +889,7 @@ VW %>%
     position = "right"
   ) +
   scale_x_date(
-    date_breaks = "2 years", # Set major breaks to every second year
+    date_breaks = "5 years", # Set major breaks to every second year
     date_labels = "%Y"       # Format labels to show only the year
   ) +
   labs(title = "Volkswagen Stock Closing Price",
@@ -930,7 +930,7 @@ VW %>%
     position = "right" # put it on the right side
   ) +
   scale_x_date(
-    date_breaks = "2 years", # Set major breaks to every second year
+    date_breaks = "5 years", # Set major breaks to every second year
     date_labels = "%Y"       # Format labels to show only the year
   ) +
   labs(title = "Volkswagen Stock Closing Price",
@@ -1064,7 +1064,7 @@ VW %>%
     labels = scales::label_dollar(prefix = "", suffix = "\u20ac", big.mark = ".",
       decimal.mark = ","), position = "right") +
   scale_x_date(
-    date_breaks = "2 years", # Set major breaks to every second year
+    date_breaks = "5 years", # Set major breaks to every second year
     date_labels = "%Y"       # Format labels to show only the year
   ) +
   labs(title = "Volkswagen Stock Closing Price",
@@ -1091,7 +1091,7 @@ VW %>%
   scale_y_continuous(labels = scales::percent_format(), 
                      position = "right") +
   scale_x_date(
-    date_breaks = "2 years", # Set major breaks to every second year
+    date_breaks = "5 years", # Set major breaks to every second year
     date_labels = "%Y"       # Format labels to show only the year
   ) +
   labs(title = "Volkswagen Return of Investment (ROI)",
@@ -1112,7 +1112,7 @@ VW %>%
   scale_y_continuous(labels = scales::percent_format(), 
                      position = "right") +
   scale_x_date(
-    date_breaks = "2 years", # Set major breaks to every second year
+    date_breaks = "5 years", # Set major breaks to every second year
     date_labels = "%Y"       # Format labels to show only the year
   ) +
   labs(title = "Volkswagen Return of Investment (ROI)",
@@ -1158,6 +1158,4 @@ VW %>%
        caption = "Data from Yahoo Finance",
        x = "Date",
        y = "Closing value (30-day moving average)")
-  labs(title = )
-
   
